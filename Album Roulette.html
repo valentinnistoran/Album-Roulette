@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Album Roulette</title>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+			background-color: #ffffff;
+		}
+		
+		#myButton {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			font-size: 18px;
+			padding: 10px 20px;
+		}
+		
+		#titleMessage {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			padding: 16px;
+			background-color: rgba(0, 0, 0, 0.8);
+			color: white;
+			border-radius: 8px;
+			font-family: Arial, sans-serif;
+			font-size: 20px;
+			z-index: 9999;
+		}
+	</style>
+</head>
+<body>
+	<script src="https://cdn.jsdelivr.net/npm/three@0.130.1/build/three.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<div id="titleMessage" style="display: none;"></div>
+	<script>
+	
+		// arrays with the data
+		const albumTitles = [
+			'sweetener',
+			'positions',
+			'Red (Taylor\'s Version)',
+			'reputation',
+			'Joanne',
+			'Familia',
+			'30',
+			'Funhouse',
+			'Plastic Hearts',
+			'Love Sux',
+			'Starboy',
+			'Harry\'s House'
+		];
+		
+		const songTitles = [
+			'no tears left to cry',
+			'positions',
+			'Red (Taylor\s Version)',
+			'Look What You  Made Me Do',
+			'Perfect Illusion',
+			'Don\'t Go Yet',
+			'Easy On Me',
+			'So What',
+			'Plastic Hearts',
+			'Love Sux',
+			'Starboy',
+			'As It Was'
+		];
+		
+		const spotifyLinks = [
+			/*sweetener*/ 'https://open.spotify.com/album/3tx8gQqWbGwqIGZHqDNrGe?autoplay=true&v=L',
+			/*positions*/ 'https://open.spotify.com/album/3euz4vS7ezKGnNSwgyvKcd?autoplay=true&v=L',
+			/*Red TV*/	'https://open.spotify.com/album/6kZ42qRrzov54LcAk4onW9?autoplay=true&v=L',
+			/*reputation*/	'https://open.spotify.com/album/6DEjYFkNZh67HP7R9PSZvv?autoplay=true&v=L',
+			/*Joanne*/	'https://open.spotify.com/album/6Lz05XTRg1D6cCViSANoY3?autoplay=true&v=L',
+			/*Familia*/	'https://open.spotify.com/album/5Nn3fX7CuJo7tbibtqASmf?autoplay=true&v=L',
+			/*30*/	'https://open.spotify.com/album/21jF5jlMtzo94wbxmJ18aa?autoplay=true&v=L',
+			/*Funhouse*/	'https://open.spotify.com/album/21tsMIrRLUKFwfvX9oxQZR?autoplay=true&v=L',
+			/*Plastic Hearts*/	'https://open.spotify.com/album/5BRhg6NSEZOj0BR6Iz56fR?autoplay=true&v=L',
+			/*Love Sux*/	'https://open.spotify.com/album/5pkQpJAHxy9BzwA7E1UWxF?autoplay=true&v=L',
+			/*Starboy*/	'https://open.spotify.com/album/2ODvWsOgouMbaA5xf0RkJe?autoplay=true&v=L',
+			/*Harry's House*/	'https://open.spotify.com/album/5r36AJ6VOJtp00oxSkBZ5h?autoplay=true&v=L'
+		];
+		
+		const albumTextures = [
+			/*sweetener*/ 'https://dl.dropboxusercontent.com/s/m6v6gpx82sz2v9w/sweetener.png?dl=0',
+			/*positions*/ 'https://dl.dropboxusercontent.com/s/rl6ypkb1yicrfx0/positions.png?dl=0',
+			/*Red TV*/	'https://dl.dropboxusercontent.com/s/4fhbfo2g2t8iu25/Red%20TV.png?dl=0',
+			/*reputation*/	'https://dl.dropboxusercontent.com/s/p9f345x7va8hp23/reputation.png?dl=0',
+			/*Joanne*/	'https://dl.dropboxusercontent.com/s/2ynuv85579smt5j/Joanne.png?dl=0',
+			/*Familia*/	'https://dl.dropboxusercontent.com/s/plnw6pq5niw0mtx/Familia.png?dl=0',
+			/*30*/	'https://dl.dropboxusercontent.com/s/eo5a7parhechsdn/30.png?dl=0',
+			/*Funhouse*/	'https://dl.dropboxusercontent.com/s/z4gn653b7qvvzjk/Funhouse.png?dl=0',
+			/*Plastic Hearts*/	'https://dl.dropboxusercontent.com/s/c942sat1nzkmc6u/Plastic%20Hearts.png?dl=0',
+			/*Love Sux*/	'https://dl.dropboxusercontent.com/s/nbokeefxj3b3vn8/Love%20Sux.png?dl=0',
+			/*Starboy*/	'https://dl.dropboxusercontent.com/s/haxh8y7aes4lghi/Starboy.png?dl=0',
+			/*Harry's House*/	'https://dl.dropboxusercontent.com/s/6mf5q5b21iwo06g/Harry%27s%20House.png?dl=0'
+		];
+		
+		const songs = [
+			/*sweetener*/ 'https://dl.dropboxusercontent.com/s/66b6iieczu9xuz4/no%20tears%20left%20to%20cry.mp3?dl=0',
+			/*positions*/ 'https://dl.dropboxusercontent.com/s/bwughuosgadk5zp/positions.mp3?dl=0',
+			/*Red TV*/	'https://dl.dropboxusercontent.com/s/a3rccoy6m7n1rkp/Red%20%28Taylor%27s%20Version%29.mp3?dl=0',
+			/*Look What You  Made Me Do*/	'https://dl.dropboxusercontent.com/s/88zkcptcjopgxyj/Look%20What%20You%20Made%20Me%20Do.mp3?dl=0',
+			/*Perfect Illusion*/	'https://dl.dropboxusercontent.com/s/ie5ayqwf95ttisu/Perfect%20Illusion.mp3?dl=0',
+			/*Don't Go Yet*/	'https://dl.dropboxusercontent.com/s/tc7ur8s74nbx3j2/Don%27t%20Go%20Yet.mp3?dl=0',
+			/*Easy On Me*/	'https://dl.dropboxusercontent.com/s/4z4oxpfyrtk46bm/Easy%20On%20Me.mp3?dl=0',
+			/*So What*/	'https://dl.dropboxusercontent.com/s/ve27kuteoagjri0/So%20What.mp3?dl=0',
+			/*Plastic Hearts*/	'https://dl.dropboxusercontent.com/s/rt2x9dlpm0m9gbq/Plastic%20Hearts.mp3?dl=0',
+			/*Love Sux*/	'https://dl.dropboxusercontent.com/s/oum3i1ncjljq3ru/Love%20Sux.mp3?dl=0',
+			/*Starboy*/	'https://dl.dropboxusercontent.com/s/3yvqnaoslcvpg9y/Starboy.mp3?dl=0',
+			/*As It Was*/	'https://dl.dropboxusercontent.com/s/9fgu2r5mzd50lvc/As%20It%20Was.mp3?dl=0'
+		];
+		
+		const backgrounds = [
+			/*sweetener*/ 'https://dl.dropboxusercontent.com/s/my74s4qxf94tpsz/sweetener%20Bckg.jpg?dl=0',
+			/*positions*/ 'https://dl.dropboxusercontent.com/s/pz5uc5nkk3ajhhe/Positions%20Bckg.jpg?dl=0',
+			/*Red TV*/	'https://dl.dropboxusercontent.com/s/m9rmhu8jnuk5513/Red%20Bckg.jpg?dl=0',
+			/*reputation*/	'https://dl.dropboxusercontent.com/s/g3e6yrh18rg4ekq/reputation%20Bckg.jpg?dl=0',
+			/*Joanne*/	'https://dl.dropboxusercontent.com/s/ob0tfa30ztv9lm2/Joanne%20Bckg.jpg?dl=0',
+			/*Familia*/	'https://dl.dropboxusercontent.com/s/5yhm5bhph3kquif/Familia%20Bckg.jpg?dl=0',
+			/*30*/	'https://dl.dropboxusercontent.com/s/8x3v1vyvu6kr4kb/30%20Bckg.jpg?dl=0',
+			/*Funhouse*/	'https://dl.dropboxusercontent.com/s/6he0yvsmu5gxhw6/Funhouse%20Bckg.jpg?dl=0',
+			/*Plastic Hearts*/	'https://dl.dropboxusercontent.com/s/454i39nxw40rtam/Plastic%20Hearts%20Bckg.jpg?dl=0',
+			/*Love Sux*/	'https://dl.dropboxusercontent.com/s/7jzfzreremn1ec4/Love%20Sux%20Bckg.jpg?dl=0',
+			/*Starboy*/	'https://dl.dropboxusercontent.com/s/j2b4fbwpbyeg93s/Starboy%20Bckg.jpg?dl=0',
+			/*Harry's House*/	'https://dl.dropboxusercontent.com/s/whta8vte8bifqbw/Harry%27s%20House%20Bckg.jpg?dl=0'
+		];
+		
+		const floorColors = [
+			/*sweetener*/ 'daa385',
+			/*positions*/ '739894',
+			/*Red TV*/	'770604',
+			/*reputation*/	'3c3c3c',
+			/*Joanne*/	'FAA3C3',
+			/*Familia*/	'1f441c',
+			/*30*/	'233c40',
+			/*Funhouse*/	'bf393e',
+			/*Plastic Hearts*/	'711843',
+			/*Love Sux*/	'e84413',
+			/*Starboy*/	'0c2561',
+			/*Harry's House*/	'87462f'
+		];
+		
+		
+		// creating the scene, camera and renderer
+		const scene = new THREE.Scene();
+		
+		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+		camera.position.set(0, 1.6, 10);
+		scene.add(camera);
+		
+		const renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setClearColor(0x000000, 1);
+		document.body.appendChild(renderer.domElement);
+		
+		// add ambient light
+		var ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // Add ambient light with an intensity of 0.5
+		scene.add(ambientLight);
+		
+		// add the background, the floor and the buttons
+		const textureLoader = new THREE.TextureLoader();
+		const backgroundGeometry = new THREE.PlaneGeometry(70, 40);
+		const backgroundTexture = textureLoader.load(backgrounds[3]);
+		const backgroundMaterial = new THREE.MeshBasicMaterial({ map: backgroundTexture, transparent: true });
+		const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+		const alphaValue = 0.7;
+		backgroundMaterial.opacity = alphaValue;
+		backgroundMaterial.transparent = true;
+		background.position.set(0, 1.5, -10);
+		scene.add(background);
+		
+		var floorGeometry = new THREE.PlaneBufferGeometry(32, 32, 1, 1);
+		floorGeometry.attributes.position.array[1] = 10;
+		floorGeometry.attributes.position.array[4] = 10;
+		floorGeometry.attributes.position.array[6] = -4;
+		floorGeometry.attributes.position.array[9] = 4;
+		var floorMaterial = new THREE.MeshBasicMaterial({ color: 0x3c3c3c });
+		var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		floor.rotation.x = Math.PI / -2;
+		floor.position.set(0, -1.1, 0);
+		scene.add(floor);
+		
+		const soundButton = document.createElement("div");
+		soundButton.id = "soundButton";
+		soundButton.style.position = "absolute";
+		soundButton.style.top = "40px";
+		soundButton.style.left = "40px";
+		soundButton.style.fontSize = "14px";
+		soundButton.style.padding = "0";
+		soundButton.style.setProperty("background-color", "white");
+		soundButton.style.border = "2px solid black";
+		soundButton.style.borderRadius = "8px";
+		soundButton.style.cursor = "pointer";
+		soundButton.style.backgroundColor = "#" + floorColors[3];
+		soundButton.style.display = "flex";
+		soundButton.style.alignItems = "center";
+		soundButton.style.justifyContent = "center";
+		soundButton.style.width = "80px";
+		const soundIcon = document.createElement("img");
+		soundIcon.src = "https://dl.dropboxusercontent.com/s/z93sswu58pee1i6/Mute_Icon.svg.png?dl=0";
+		soundIcon.style.width = "90%";
+		soundIcon.style.height = "auto";
+		soundIcon.style.marginRight = "8px";
+		soundButton.appendChild(soundIcon);
+		document.body.appendChild(soundButton);
+		
+		const soundMessage = document.createElement("div");
+		soundMessage.style.position = "absolute";
+		soundMessage.style.top = "60px";
+		soundMessage.style.left = "130px";
+		soundMessage.style.padding = "8px 16px";
+		soundMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+		soundMessage.style.color = "white";
+		soundMessage.style.borderRadius = "8px";
+		soundMessage.style.visibility = "hidden";
+		soundMessage.style.fontSize = "20px";
+		soundMessage.innerText = "Play \"" + songTitles[3] + "\"";
+		document.body.appendChild(soundMessage);
+
+		const spotifyButton = document.createElement("div");
+		spotifyButton.id = "myButton";
+		spotifyButton.style.top = "40px";
+		spotifyButton.style.right = "40px";
+		spotifyButton.style.padding = "0";
+		spotifyButton.style.border = "2px solid black";
+		spotifyButton.style.borderRadius = "8px";
+		spotifyButton.style.cursor = "pointer";
+		spotifyButton.style.display = "flex";
+		spotifyButton.style.alignItems = "center";
+		spotifyButton.style.justifyContent = "center";
+		spotifyButton.style.width = "80px";
+		const spotifyIcon = document.createElement("img");
+		spotifyIcon.src = "https://dl.dropboxusercontent.com/s/vt1838lydv97pbm/Spotify%20Icon.png?dl=0";
+		spotifyIcon.style.width = "100%";
+		spotifyIcon.style.height = "auto";
+		spotifyButton.appendChild(spotifyIcon);
+		document.body.appendChild(spotifyButton);
+		
+		const albumLink = document.createElement("a");
+		albumLink.href = spotifyLinks[3]; // Set the initial URL
+		albumLink.target = "_blank";
+		albumLink.appendChild(spotifyButton); // Append the button to the anchor element
+		document.body.appendChild(albumLink);
+
+		const spotifyMessage = document.createElement("div");
+		spotifyMessage.style.position = "absolute";
+		spotifyMessage.style.top = "60px";
+		spotifyMessage.style.right = "130px";
+		spotifyMessage.style.padding = "8px 16px";
+		spotifyMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+		spotifyMessage.style.color = "white";
+		spotifyMessage.style.borderRadius = "8px";
+		spotifyMessage.style.visibility = "hidden";
+		spotifyMessage.style.fontSize = "20px";
+		spotifyMessage.innerText = "Stream \"" + albumTitles[3] + "\" on Spotify!";
+		document.body.appendChild(spotifyMessage);
+		
+		const helpButton = document.createElement("helpButton");
+		helpButton.id = "helpButton";
+		helpButton.style.position = "absolute";
+		helpButton.style.top = "140px";
+		helpButton.style.left = "50px";
+		helpButton.style.fontSize = "14px";
+		helpButton.style.padding = "0";
+		helpButton.style.setProperty("background-color", "white");
+		helpButton.style.border = "2px solid black";
+		helpButton.style.borderRadius = "8px";
+		helpButton.style.cursor = "pointer";
+		helpButton.style.backgroundColor = "#" + floorColors[3];
+		helpButton.style.display = "flex";
+		helpButton.style.alignItems = "center";
+		helpButton.style.justifyContent = "center";
+		helpButton.style.width = "60px";
+		const helpIcon = document.createElement("img");
+		helpIcon.src = "https://dl.dropboxusercontent.com/s/c8kxjai3b0gwqx5/Info%20Icon.jpg?dl=0";
+		helpIcon.style.width = "100%";
+		helpIcon.style.height = "auto";
+		helpButton.appendChild(helpIcon);
+		document.body.appendChild(helpButton);
+		
+		const helpMessage = document.createElement("div");
+		helpMessage.style.position = "absolute";
+		helpMessage.style.top = "155px";
+		helpMessage.style.left = "120px";
+		helpMessage.style.padding = "8px 16px";
+		helpMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+		helpMessage.style.color = "white";
+		helpMessage.style.borderRadius = "8px";
+		helpMessage.style.visibility = "hidden";
+		helpMessage.style.fontSize = "20px";
+		helpMessage.innerText = "Show help";
+		document.body.appendChild(helpMessage);
+		
+		const commandsMessage = document.createElement("div");
+		commandsMessage.style.position = "fixed";
+		commandsMessage.style.bottom = "20px";
+		commandsMessage.style.left = "50%";
+		commandsMessage.style.transform = "translateX(-50%)";
+		commandsMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+		commandsMessage.style.color = "white";
+		commandsMessage.style.borderRadius = "8px";
+		commandsMessage.style.padding = "10px";
+		commandsMessage.style.whiteSpace = "nowrap";
+		commandsMessage.style.overflow = "hidden";
+		commandsMessage.style.visibility = "hidden"
+		commandsMessage.style.textOverflow = "ellipsis";
+		commandsMessage.style.fontSize = "20px";
+		commandsMessage.innerText = "Use the arrows to browse through the album collection. Play or mute songs from the top left button and access the Spotify album pages from the top right button.";
+		document.body.appendChild(commandsMessage);
+		
+		// creating the cubes
+		const numCubes = 12;
+		const radius = 5;
+		const cubes = [];
+		const centerCubeCoords = [];
+		let albumOut = 3;
+		
+		for (let i = 0; i < numCubes; i++) {
+		
+			const texture = textureLoader.load(albumTextures[i]);
+			const material = new THREE.MeshBasicMaterial({ map: texture });
+			const cube = new THREE.Mesh( new THREE.BoxGeometry(2, 2, 0.2), material );
+
+			const angle = (Math.PI * 2) / numCubes;
+			
+			cube.position.x = radius * Math.cos(angle * i);
+			cube.position.z = radius * Math.sin(angle * i);
+			
+			if (i == 3){
+				centerCubeCoords.push(cube.position.x);
+				centerCubeCoords.push(1.6);
+				centerCubeCoords.push(cube.position.z);
+			}
+			
+			const standGeometry = new THREE.BoxGeometry(2.2, 0.1, 0.4);
+			const standMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffd700,
+				metalness: 0.3,
+			});
+			const stand = new THREE.Mesh(standGeometry, standMaterial);
+			stand.position.y = -1.05;
+			cube.add(stand);
+			
+			scene.add(cube);
+			cubes.push(cube);
+		}
+		
+		// the methods
+		const musicPlayer = new Audio();
+		musicPlayer.loop = true;
+		let playingSound = false;
+		let isTweening = false;
+
+		// change the floor, background, buttons and messages
+		const changeDecor = function() {
+			floor.material.color.setHex("0x" + floorColors[albumOut]);
+				textureLoader.load(backgrounds[albumOut], function(updatedTexture) {
+				backgroundMaterial.map = updatedTexture;
+				backgroundMaterial.needsUpdate = true;
+			});
+			let button = document.getElementById("soundButton");
+			button.style.backgroundColor = "#" + floorColors[albumOut];
+			button = document.getElementById("helpButton");
+			button.style.backgroundColor = "#" + floorColors[albumOut];
+			updateSoundMessage();
+			spotifyMessage.innerText = "Stream \"" + albumTitles[albumOut] + "\" on Spotify!";
+			albumLink.href = spotifyLinks[albumOut];
+			showMessage()
+		};
+		
+		function showMessage() {
+		  const albumTitle = $("#titleMessage");
+
+		  albumTitle.text(albumTitles[albumOut]);
+		  albumTitle.show();
+		  setTimeout(function() {
+			albumTitle.hide();
+		  }, 3000);
+		}
+
+		soundButton.addEventListener("mouseenter", () => {
+		  soundMessage.style.visibility = "visible";
+		});
+		soundButton.addEventListener("mouseleave", () => {
+		  soundMessage.style.visibility = "hidden";
+		});
+		
+		spotifyButton.addEventListener("mouseenter", () => {
+		  spotifyMessage.style.visibility = "visible";
+		});
+		spotifyButton.addEventListener("mouseleave", () => {
+		  spotifyMessage.style.visibility = "hidden";
+		});
+		
+		helpButton.addEventListener("mouseenter", () => {
+		  helpMessage.style.visibility = "visible";
+		});
+		helpButton.addEventListener("mouseleave", () => {
+		  helpMessage.style.visibility = "hidden";
+		});
+		
+		helpButton.addEventListener("mouseenter", () => {
+		  helpMessage.style.visibility = "visible";
+		});
+		helpButton.addEventListener("mouseleave", () => {
+		  helpMessage.style.visibility = "hidden";
+		});
+		
+		helpButton.addEventListener("click", () => {
+			commandsMessage.style.visibility = "visible";
+			setTimeout(function() {
+				commandsMessage.style.visibility = "hidden"; // Corrected line to hide the message
+			}, 8000);
+		});
+		
+		const updateSoundMessage = function() {
+			if(playingSound){
+				soundMessage.innerText = "Mute \"" + songTitles[albumOut] + "\"";
+			}
+			else{
+				soundMessage.innerText = "Play \"" + songTitles[albumOut] + "\"";
+			}
+		}
+
+		soundButton.addEventListener("click", function () {
+			if (!playingSound) {
+				musicPlayer.src = songs[albumOut];
+				musicPlayer.play();
+				playingSound = true;
+				updateSoundMessage();
+				soundIcon.src = 'https://dl.dropboxusercontent.com/s/cidba6btakbe38x/Speaker_Icon.svg.png?dl=0';
+			}
+			else {
+				musicPlayer.pause();
+				playingSound = false;
+				updateSoundMessage();
+				soundIcon.src = 'https://dl.dropboxusercontent.com/s/z93sswu58pee1i6/Mute_Icon.svg.png?dl=0';
+			}
+		});
+		
+		document.addEventListener('keydown', (event) => {
+			const speed = 0.1;
+			
+			if (!isTweening) {
+				switch (event.key) {
+					case 'ArrowRight':
+						isTweening = true;
+						for (let i = 0; i < numCubes; i++) {
+							let cube = cubes[i];
+							let newPosition;
+							if( i < 11 ) {
+								newPosition = new THREE.Vector3(cubes[i+1].position.x, cubes[i+1].position.y, cubes[i+1].position.z);
+							}
+							else {
+								newPosition = new THREE.Vector3(cubes[0].position.x, cubes[0].position.y, cubes[0].position.z);
+							}
+							
+							let tween = new TWEEN.Tween(cube.position).to(newPosition, 500).onComplete(() => {
+								isTweening = false;
+								
+							}).start();
+						}
+						if(albumOut == 0){
+							albumOut = 11;
+						}
+						else{
+							albumOut -= 1;
+						}
+						changeDecor();
+						break;
+					case 'ArrowLeft':
+						isTweening = true;
+						for (let i = 0; i < numCubes; i++) {
+							let cube = cubes[i];
+							let newPosition;
+							if( i > 0 ) {
+								newPosition = new THREE.Vector3(cubes[i-1].position.x, cubes[i-1].position.y, cubes[i-1].position.z);
+							}
+							else {
+								newPosition = new THREE.Vector3(cubes[11].position.x, cubes[11].position.y, cubes[11].position.z);
+							}
+
+							let tween = new TWEEN.Tween(cube.position).to(newPosition, 500).onComplete(() => {
+								isTweening = false;
+							}).start();
+						}
+						if(albumOut == 11){
+							albumOut = 0;
+						}
+						else{
+							albumOut += 1;
+						}
+						changeDecor();
+						break;
+				}
+				if(playingSound){
+					musicPlayer.src = songs[albumOut];
+					musicPlayer.play();
+				}
+			}
+		});
+		
+		const animate = function() {
+			requestAnimationFrame(animate);
+			renderer.render(scene, camera);
+			TWEEN.update();
+		};
+		
+		animate();
+		
+	</script>
+</body>
+</html>
